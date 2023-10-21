@@ -40,7 +40,7 @@
     - [ ] Would like conversion options - MP4, WMV, FLV, AVI, WebM, MOV, OGG, MP3, WAV, FLAC
     - [ ] Would like to add more content sources
     - [X] Write a better way to validate URLS 
-    - [] Extended support for other sources: Dailymotion, Facebook, Instagram, Twitter, TikTok?, TED?, Metacafe?, Twitch?, Etc.
+    - [] Extended support for other sources: Dailymotion, Facebook, Instagram, Twitter, TikTok?, TED?, Metacafe?, Twitch?
 """
 """
     TESTING LOG:
@@ -51,6 +51,7 @@
     - [ ] CLI Vimeo downloads work
     - [ ] CLI Single YT Videos download properly
     - [ ] CLI Playlists work
+    - [ ] File conversions work
 
 """
 
@@ -58,8 +59,7 @@
 # LIBRARIES
 ###########################################################
 
-import os, re, argparse, shutil, zipfile
-
+import os, re, argparse, shutil, zipfile, subprocess
 import tkinter as tk
 from tkinter import ttk, filedialog
 from pytube import YouTube, Playlist
@@ -73,10 +73,44 @@ DOWNLOAD_OPTIONS_LIST = ["YouTube - Single Video",
                          "YouTube - Playlist", 
                          "Vimeo - Single Video"]
 
+FILE_OPTIONS_LIST = ["MP4", 
+                     "WMV", 
+                     "FLV", 
+                     "AVI", 
+                     "WebM", 
+                     "MOV", 
+                     "OGG", 
+                     "MP3", 
+                     "WAV", 
+                     "FLAC"]
+
 ###########################################################
 # FUNCTIONS RELATED TO FILE HANDLING
 ###########################################################
 
+# File conversions
+def convert_file(input, output_file_type):
+    output_file_type = output_file_type.lower()
+    if output_file_type == "mp4":
+        #command = "ffmpeg -y -i \"" + input + "\" -c:v libx264 -c:a aac \"" + input + "" + ".mp4\""
+        command = 'ffmpeg -y -i "{}" -c:v libx264 -c:a aac "{}.mp4"'.format(input, input)
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "wmv":
+        command = "ffmpeg -i {input} -c:v wmv2 -c:a wmav2 output.wmv"
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "flv":
+        command = "ffmpeg -i {input} -c:v flv -c:a mp3 output.flv"
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "avi":
+        command = "ffmpeg -i {input} -c:v mpeg4 -c:a mp3 output.avi"
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "webm":
+        command = "ffmpeg -i {input} -c:v libvpx-vp9 -c:a libopus output.webm"
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "mov":
+        command = "ffmpeg -i {input} -c:v libx264 -c:a aac output.mov"
+        subprocess.run(command, shell=True, check=True)
+    
 # Sanitize file names for file system limit, and remove disallowed characters
 def sanitize_filename(filename):
     # Replace spaces with underscores
@@ -117,29 +151,35 @@ def validate_url(url_input):
         return None
     
 # Single YT Video Method
-def download_single_video(video_url, output_path):
+def download_single_video(video_url, output_path, extension):
+    output_path = output_path.replace("/", "\\")
     try:
         if validate_url(video_url) != None:
             yt = YouTube(video_url)
             stream = yt.streams.get_highest_resolution()
             sanitized_title = sanitize_filename(yt.title)  # Sanitize the video title
-            #output_file_path = os.path.join(output_path, sanitized_title, ".mp4") #not needed at the moment
-            stream.download(output_path)
+            stream.download(output_path, sanitized_title)
+            if extension != None: #Convert video
+                path = os.path.join(output_path, sanitized_title)
+                convert_file(path, extension)
+                if os.path.exists(path):
+                    os.remove(path)
             status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
     except Exception as e:
         status_label.config(text=f"Error: {e}")
 
 # YT Playlist Method
-def download_playlist(playlist_url, output_path):
+def download_playlist(playlist_url, output_path, extension):
     try:
         if validate_url(playlist_url) == None:
             raise ValueError("Wrong format specified")
         pl = Playlist(playlist_url)
-        playlist_title = pl.title
+        playlist_title = sanitize_filename(pl.title)
         playlist_folder = os.path.join(output_path, playlist_title)
         os.makedirs(playlist_folder, exist_ok=True)
         for video in pl.videos:
-            download_single_video(video.watch_url, playlist_folder)
+            download_single_video(video.watch_url, playlist_folder)         
+            
         status_label.config(text=f"Downloaded: {playlist_title[:12]+"..."}")
 
         # Zip the folder
@@ -156,7 +196,8 @@ def download_playlist(playlist_url, output_path):
         status_label.config(text=f"Error: {e}")
 
 # Vimeo Download Method
-def download_vimeo_video(video_url, output_path):
+def download_vimeo_video(video_url, output_path, extension):
+    output_path = output_path.replace("/", "\\")
     try:
         if validate_url(video_url) == None:
             raise ValueError("Wrong format specified")
@@ -167,6 +208,12 @@ def download_vimeo_video(video_url, output_path):
         sanitized_title = sanitize_filename(meta.title)  # Sanitize the video title
         best_stream.download(download_directory=output_path, filename=sanitized_title)
         status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
+
+        if extension != None: #Convert video
+            path = os.path.join(output_path, sanitized_title)
+            convert_file(os.path.join(output_path, sanitized_title), extension)
+            if os.path.exists(path):
+                os.remove(path)        
     except Exception as e:
         status_label.config(text=f"Error: {e}")
 
@@ -215,11 +262,17 @@ def gui():
     browse_button = ttk.Button(frame, text="Browse", command=browse_folder)
     browse_button.grid(column=2, row=5)
 
+    file_option = ttk.Combobox(frame, values=FILE_OPTIONS_LIST)
+    file_option.set("MP4")  # Set the default option
+    file_option.grid(column=0, row=6, columnspan=3)
+
     def download():
         output_path = folder_entry.get()
         selected_option = download_option.get()
         url = video_entry.get()
-        
+        output_file_type = file_option.get()
+        print(output_file_type)
+
         hide_status_label()
 
         if not url:
@@ -228,18 +281,18 @@ def gui():
             status_label.config(text="Error: No output folder specified")
         else:
             if selected_option == "YouTube - Single Video":
-                download_single_video(url, output_path)
+                download_single_video(url, output_path, output_file_type)
             elif selected_option == "YouTube - Playlist":
-                download_playlist(url, output_path)
+                download_playlist(url, output_path, output_file_type)
             elif selected_option == "Vimeo":
-                download_vimeo_video(url, output_path)
+                download_vimeo_video(url, output_path, output_file_type)
 
     download_button = ttk.Button(frame, text="Download", command=download)
-    download_button.grid(column=0, row=6, columnspan=3)
+    download_button.grid(column=0, row=7, columnspan=3)
 
     global status_label
     status_label = ttk.Label(frame, text="")
-    status_label.grid(column=0, row=7, columnspan=3)
+    status_label.grid(column=0, row=8, columnspan=3)
 
     app.mainloop()
 
@@ -251,6 +304,7 @@ def cli():
     parser = argparse.ArgumentParser(description="Download online video content through a CLI.")
     parser.add_argument("-i", "--input", help="Specify a URL to download content from.")
     parser.add_argument("-o", "--output", help="Specify the output folder.")
+    parser.add_argument("-e", "--extension", help="Specify the file extension to convert to (MP4, WMV, FLV, AVI, WebM, MOV, OGG, MP3, WAV, FLAC).")
 
     args = parser.parse_args()
     
@@ -260,11 +314,11 @@ def cli():
         if validated_url != None:
             download_method = validated_url
             if download_method == "YouTube - Single Video":
-                download_single_video(video_url=args.input, output_path=args.output)
+                download_single_video(video_url=args.input, output_path=args.output, extension = args.extension)
             elif download_method == "YouTube - Playlist":
-                download_playlist(playlist_url=args.input, output_path=args.output)
+                download_playlist(playlist_url=args.input, output_path=args.output, extension = args.extension)
             elif download_method == "Vimeo - Single Video":
-                return
+                download_vimeo_video(video_url=args.input, output_path=args.output, extension = args.extension)
         else:
             # URL was not validated and returned None
             print("Invalid URL format.")
