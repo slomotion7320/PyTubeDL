@@ -51,7 +51,7 @@
     - [ ] CLI Vimeo downloads work
     - [ ] CLI Single YT Videos download properly
     - [ ] CLI Playlists work
-    - [ ] File conversions work
+    - [X] File conversions work
 
 """
 
@@ -92,24 +92,25 @@ FILE_OPTIONS_LIST = ["MP4",
 def convert_file(input, output_file_type):
     output_file_type = output_file_type.lower()
     if output_file_type == "mp4":
-        #command = "ffmpeg -y -i \"" + input + "\" -c:v libx264 -c:a aac \"" + input + "" + ".mp4\""
         command = 'ffmpeg -y -i "{}" -c:v libx264 -c:a aac "{}.mp4"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     elif output_file_type == "wmv":
-        command = "ffmpeg -i {input} -c:v wmv2 -c:a wmav2 output.wmv"
+        command = 'ffmpeg -i "{}" -c:v wmv2 -c:a wmav2 "{}.wmv"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     elif output_file_type == "flv":
-        command = "ffmpeg -i {input} -c:v flv -c:a mp3 output.flv"
+        command = 'ffmpeg -i "{}" -c:v flv -c:a mp3 "{}.flv"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     elif output_file_type == "avi":
-        command = "ffmpeg -i {input} -c:v mpeg4 -c:a mp3 output.avi"
+        command = 'ffmpeg -i "{}" -c:v mpeg4 -c:a mp3 "{}.avi"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     elif output_file_type == "webm":
-        command = "ffmpeg -i {input} -c:v libvpx-vp9 -c:a libopus output.webm"
+        command = 'ffmpeg -i "{}" -c:v libvpx-vp9 -c:a libopus "{}.webm"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     elif output_file_type == "mov":
-        command = "ffmpeg -i {input} -c:v libx264 -c:a aac output.mov"
+        command = 'ffmpeg -i "{}" -c:v libx264 -c:a aac "{}.mov"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
+    else:
+        status_label.config(text="Error: " + "Invalid filetype specified.")
     
 # Sanitize file names for file system limit, and remove disallowed characters
 def sanitize_filename(filename):
@@ -159,12 +160,14 @@ def download_single_video(video_url, output_path, extension):
             stream = yt.streams.get_highest_resolution()
             sanitized_title = sanitize_filename(yt.title)  # Sanitize the video title
             stream.download(output_path, sanitized_title)
-            if extension != None: #Convert video
-                path = os.path.join(output_path, sanitized_title)
-                convert_file(path, extension)
-                if os.path.exists(path):
-                    os.remove(path)
             status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
+
+            path = os.path.join(output_path, sanitized_title)
+            convert_file(path, extension)
+            status_label.config(text=f"Converted: {sanitized_title[:12]+"..."}")
+            if os.path.exists(path):
+                os.remove(path)
+
     except Exception as e:
         status_label.config(text=f"Error: {e}")
 
@@ -180,8 +183,6 @@ def download_playlist(playlist_url, output_path, extension):
         for video in pl.videos:
             download_single_video(video.watch_url, playlist_folder)         
             
-        status_label.config(text=f"Downloaded: {playlist_title[:12]+"..."}")
-
         # Zip the folder
         zip_filename = f"{playlist_title}.zip"
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -209,11 +210,12 @@ def download_vimeo_video(video_url, output_path, extension):
         best_stream.download(download_directory=output_path, filename=sanitized_title)
         status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
 
-        if extension != None: #Convert video
-            path = os.path.join(output_path, sanitized_title)
-            convert_file(os.path.join(output_path, sanitized_title), extension)
-            if os.path.exists(path):
-                os.remove(path)        
+        path = os.path.join(output_path, sanitized_title)
+        convert_file(os.path.join(output_path, sanitized_title), extension)
+        status_label.config(text=f"Converted: {sanitized_title[:12]+"..."}")
+
+        if os.path.exists(path):
+            os.remove(path)        
     except Exception as e:
         status_label.config(text=f"Error: {e}")
 
@@ -304,7 +306,7 @@ def cli():
     parser = argparse.ArgumentParser(description="Download online video content through a CLI.")
     parser.add_argument("-i", "--input", help="Specify a URL to download content from.")
     parser.add_argument("-o", "--output", help="Specify the output folder.")
-    parser.add_argument("-e", "--extension", help="Specify the file extension to convert to (MP4, WMV, FLV, AVI, WebM, MOV, OGG, MP3, WAV, FLAC).")
+    parser.add_argument("-c", "--convert", help="Specify the file extension to convert to (MP4, WMV, FLV, AVI, WebM, MOV, OGG, MP3, WAV, FLAC).")
 
     args = parser.parse_args()
     
@@ -314,11 +316,11 @@ def cli():
         if validated_url != None:
             download_method = validated_url
             if download_method == "YouTube - Single Video":
-                download_single_video(video_url=args.input, output_path=args.output, extension = args.extension)
+                download_single_video(video_url=args.input, output_path=args.output, extension = args.convert)
             elif download_method == "YouTube - Playlist":
-                download_playlist(playlist_url=args.input, output_path=args.output, extension = args.extension)
+                download_playlist(playlist_url=args.input, output_path=args.output, extension = args.convert)
             elif download_method == "Vimeo - Single Video":
-                download_vimeo_video(video_url=args.input, output_path=args.output, extension = args.extension)
+                download_vimeo_video(video_url=args.input, output_path=args.output, extension = args.convert)
         else:
             # URL was not validated and returned None
             print("Invalid URL format.")
