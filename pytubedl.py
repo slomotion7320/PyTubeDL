@@ -40,6 +40,7 @@
     - [ ] Would like conversion options - MP4, WMV, FLV, AVI, WebM, MOV, OGG, MP3, WAV, FLAC
     - [ ] Would like to add more content sources
     - [X] Write a better way to validate URLS 
+    - [] Extended support for other sources: Dailymotion, Facebook, Instagram, Twitter, TikTok?, TED?, Metacafe?, Twitch?, Etc.
 """
 """
     TESTING LOG:
@@ -58,6 +59,7 @@
 ###########################################################
 
 import os, re, argparse, shutil, zipfile
+
 import tkinter as tk
 from tkinter import ttk, filedialog
 from pytube import YouTube, Playlist
