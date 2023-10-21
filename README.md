@@ -1,6 +1,6 @@
 # PyTubeDL - Online Video Downloader
 
-![alt text](https://i.imgur.com/JZABDSym.png)
+![alt text](https://i.ibb.co/WDP0YnF/Py-Tube-DL-300x300.png)
 
 **PyTubeDL** is a versatile and graphical online video downloader interface written in pure Python. It provides an easy-to-use way to download videos from various online sources, including YouTube and Vimeo. This tool allows you to download single videos, entire playlists, and even entire channels from supported platforms. Additionally, it offers conversion options for downloading videos in various formats, making it a handy tool for anyone looking to save online content for offline viewing.
 
