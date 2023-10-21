@@ -2,11 +2,11 @@
 
 ![alt text](https://i.ibb.co/WDP0YnF/Py-Tube-DL-300x300.png)
 
-**PyTubeDL** is a versatile and graphical online video downloader interface written in pure Python. It provides an easy-to-use way to download videos from various online sources, including YouTube and Vimeo (more coming soon). This tool allows you to download single videos, entire playlists, and even entire channels from supported platforms. Additionally, it will soon offer conversion options for downloading videos in various formats, making it a handy tool for anyone looking to save online content for offline viewing.
+**PyTubeDL** is a versatile and graphical online video downloader interface written in pure Python. It provides an easy-to-use way to download videos from various online sources, including YouTube and Vimeo (more coming soon). This tool allows you to download single videos, entire playlists from supported platforms. Additionally, it will soon offer conversion options for downloading videos in various formats, making it a handy tool for anyone looking to save online content for offline viewing.
 
 Great examples of how you can use this tool:
 - Downloading a song playlist or album from artist channel
-- Downloading channels or videos for archival purposes
+- Downloading videos for archival purposes
 - Video download automation
 
 Hope you find this useful! 
@@ -14,7 +14,7 @@ Hope you find this useful!
 ## Features
 
 - Download videos from multiple online sources:
-- YouTube (single video, playlist, and channel)
+- YouTube (single video or playlist)
 - Vimeo (single video)
 - Simple and intuitive graphical user interface (GUI) for easy operation.
 - Command-line interface (CLI) for advanced users who prefer scripting and automation.
@@ -42,9 +42,9 @@ pip install -r requirements.txt
    python pytubedl.py
    ```
 
-2. Select the download type from the dropdown list, including YouTube single video, playlist, channel, or Vimeo video.
+2. Select the download type from the dropdown list, including YouTube single video, playlist, or Vimeo video.
 
-3. Enter the URL of the video, playlist, channel, or Vimeo video you want to download.
+3. Enter the URL of the video, playlist, or Vimeo video you want to download.
 
 4. Specify the output folder where you want to save the downloaded content.
 

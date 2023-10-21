@@ -47,11 +47,9 @@
     - [X] UI Vimeo downloads work
     - [X] UI Single YT Videos download properly
     - [X] UI Playlists work
-    - [ ] UI Channels work
     - [ ] CLI Vimeo downloads work
     - [ ] CLI Single YT Videos download properly
     - [ ] CLI Playlists work
-    - [ ] CLI Channels work   
 
 """
 
@@ -71,7 +69,6 @@ from vimeo_downloader import Vimeo
 
 DOWNLOAD_OPTIONS_LIST = ["YouTube - Single Video", 
                          "YouTube - Playlist", 
-                         "YouTube - Channel", 
                          "Vimeo - Single Video"]
 
 ###########################################################
@@ -103,7 +100,6 @@ def validate_url(url_input):
     youtube_regex = r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*"
     youtube_short_regex = r"^(https?://)?(www\.)?(youtu\.be)/.*"
     playlist_regex = r"^(https?://)?(www\.)?(youtube\.com/playlist\?list=).*"
-    channel_regex = r"^(https?://)?(www\.)?(youtube\.com/channel/).*"
     shorts_regex = r"^(https?://)?(www\.)?(youtube\.com/shorts/).*"
     vimeo_regex = r"^(https?://)?(www\.)?(vimeo\.com)/.*"
     
@@ -113,8 +109,6 @@ def validate_url(url_input):
         return "YouTube - Single Video"
     elif re.match(playlist_regex, url_input):
         return "YouTube - Playlist"
-    elif re.match(channel_regex, url_input):
-        return "YouTube - Channel"
     elif re.match(vimeo_regex, url_input):
         return "Vimeo - Single Video"  
     else:
@@ -155,33 +149,6 @@ def download_playlist(playlist_url, output_path):
 
         # Remove the original folder
         shutil.rmtree(playlist_folder)
-
-    except Exception as e:
-        status_label.config(text=f"Error: {e}")
-
-# YT Channel Method
-def download_channel(channel_url, output_path):
-    try:
-        if validate_url(channel_url) == None:
-            raise ValueError("Wrong format specified")
-        channel = YouTube(channel_url)
-        channel_name = channel.author
-        channel_folder = os.path.join(output_path, channel_name)
-        os.makedirs(channel_folder, exist_ok=True)
-        videos = channel.video_urls
-        for video in videos:
-            download_single_video(video, channel_folder)
-        status_label.config(text=f"Downloaded: {channel_name[:12]+"..."}")
-
-        # Zip the folder
-        zip_filename = f"{channel_name}.zip"
-        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(channel_folder):
-                for file in files:
-                    zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), channel_folder))
-
-        # Remove the original folder
-        shutil.rmtree(channel_folder)
 
     except Exception as e:
         status_label.config(text=f"Error: {e}")
@@ -262,8 +229,6 @@ def gui():
                 download_single_video(url, output_path)
             elif selected_option == "YouTube - Playlist":
                 download_playlist(url, output_path)
-            elif selected_option == "YouTube - Channel":
-                download_channel(url, output_path)
             elif selected_option == "Vimeo":
                 download_vimeo_video(url, output_path)
 
@@ -296,8 +261,6 @@ def cli():
                 download_single_video(video_url=args.input, output_path=args.output)
             elif download_method == "YouTube - Playlist":
                 download_playlist(playlist_url=args.input, output_path=args.output)
-            elif download_method == "YouTube - Channel":
-                download_channel(video_url=args.input, output_path=args.output)
             elif download_method == "Vimeo - Single Video":
                 return
         else:
