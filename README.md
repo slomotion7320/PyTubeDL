@@ -39,7 +39,7 @@ pip install -r requirements.txt
 1. Run the script with no command-line arguments:
 
    ```bash
-   python main.py
+   python pytubedl.py
    ```
 
 2. Select the download type from the dropdown list, including YouTube single video, playlist, channel, or Vimeo video.
@@ -55,7 +55,7 @@ pip install -r requirements.txt
 You can also use the CLI version of PyTubeDL for advanced users:
 
 ```bash
-python main.py -i [URL] -o [output_folder]
+python pytubedl.py -i [URL] -o [output_folder]
 ```
 
 Replace `[URL]` with the URL of the video you want to download and `[output_folder]` with the path to the output folder where you want to save the downloaded content.
