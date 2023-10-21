@@ -2,7 +2,14 @@
 
 ![alt text](https://i.ibb.co/WDP0YnF/Py-Tube-DL-300x300.png)
 
-**PyTubeDL** is a versatile and graphical online video downloader interface written in pure Python. It provides an easy-to-use way to download videos from various online sources, including YouTube and Vimeo. This tool allows you to download single videos, entire playlists, and even entire channels from supported platforms. Additionally, it offers conversion options for downloading videos in various formats, making it a handy tool for anyone looking to save online content for offline viewing.
+**PyTubeDL** is a versatile and graphical online video downloader interface written in pure Python. It provides an easy-to-use way to download videos from various online sources, including YouTube and Vimeo (more coming soon). This tool allows you to download single videos, entire playlists, and even entire channels from supported platforms. Additionally, it will soon offer conversion options for downloading videos in various formats, making it a handy tool for anyone looking to save online content for offline viewing.
+
+Great examples of how you can use this tool:
+- Downloading a song playlist or album from artist channel
+- Downloading channels or videos for archival purposes
+- Video download automation
+
+Hope you find this useful! 
 
 ## Features
 
@@ -22,7 +29,7 @@
 You can install these libraries using pip:
 
 ```bash
-pip install pytube vimeo_downloader
+pip install -r requirements.txt
 ```
 
 ## How to Use
