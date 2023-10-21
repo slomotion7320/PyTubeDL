@@ -46,8 +46,12 @@
 
     - [X] UI Vimeo downloads work
     - [X] UI Single YT Videos download properly
-    - [ ] Havent tested UI playlists
-    - [ ] Havent tested UI channels
+    - [X] UI Playlists work
+    - [ ] UI Channels work
+    - [ ] CLI Vimeo downloads work
+    - [ ] CLI Single YT Videos download properly
+    - [ ] CLI Playlists work
+    - [ ] CLI Channels work   
 
 """
 
