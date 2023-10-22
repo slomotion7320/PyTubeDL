@@ -25,6 +25,7 @@ Hope you find this useful!
 - The following Python libraries:
 - pytube
 - vimeo_downloader
+- customtkinter
 
 You can install these libraries using pip:
 
@@ -70,6 +71,7 @@ Special thanks to:
 
 - Nick Finaco for the pytube library.
 - Yash Rathi for the vimeo-downloader library.
+- Tom Schimansky for the CustomTkinter library.
 
 ## License
 
