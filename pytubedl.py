@@ -60,10 +60,19 @@
 ###########################################################
 
 import os, re, argparse, shutil, zipfile, subprocess
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import ttk, filedialog
 from pytube import YouTube, Playlist
 from vimeo_downloader import Vimeo
+
+
+# Sets the appearance mode of the application
+# "System" sets the appearance same as that of the system
+ctk.set_appearance_mode("Dark")        
+ 
+# Sets the color of the widgets
+# Supported themes: green, dark-blue, blue
+ctk.set_default_color_theme("green")    
 
 ###########################################################
 # CONSTANT VARIABLES
@@ -124,7 +133,7 @@ def convert_file(input, output_file_type):
         command = 'ffmpeg -i {} -c:a flac {}.flac'.format(input, input)
         subprocess.run(command, shell=True, check=True)
     else:
-        status_label.config(text="Error: " + "Invalid filetype specified.")
+        status_label.configure(text="Error: " + "Invalid filetype specified.")
     
 # Sanitize file names for file system limit, and remove disallowed characters
 def sanitize_filename(filename):
@@ -185,16 +194,16 @@ def download_single_video(video_url, output_path, extension, index):
                 sanitized_title = "{} - {}".format(index, sanitized_title)
 
             stream.download(output_path, sanitized_title)
-            status_label.config(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
+            status_label.configure(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
             path = os.path.join(output_path, sanitized_title)
             convert_file(path, extension)
-            status_label.config(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
+            status_label.configure(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
             if os.path.exists(path):
                 os.remove(path)
 
     except Exception as e:
-        status_label.config(text=f"Error: {e}")
+        status_label.configure(text=f"Error: {e}")
 
 # YT Playlist Method
 def download_playlist(playlist_url, output_path, extension):
@@ -219,7 +228,7 @@ def download_playlist(playlist_url, output_path, extension):
         shutil.rmtree(playlist_folder)
 
     except Exception as e:
-        status_label.config(text=f"Error: {e}")
+        status_label.configure(text=f"Error: {e}")
 
 # Vimeo Download Method
 def download_vimeo_video(video_url, output_path, extension):
@@ -233,112 +242,119 @@ def download_vimeo_video(video_url, output_path, extension):
         best_stream = streams[-1]
         sanitized_title = sanitize_filename(meta.title)  # Sanitize the video title
         best_stream.download(download_directory=output_path, filename=sanitized_title)
-        status_label.config(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
+        status_label.configure(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
         path = os.path.join(output_path, sanitized_title)
         convert_file(os.path.join(output_path, sanitized_title), extension)
-        status_label.config(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
+        status_label.configure(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
         if os.path.exists(path):
             os.remove(path)        
     except Exception as e:
-        status_label.config(text=f"Error: {e}")
+        status_label.configure(text=f"Error: {e}")
 
 ###########################################################
 # FUNCTIONS RELATED TO GUI OPERATIONS
 ###########################################################
 
-def gui():
-    def browse_folder():
-        # Function to open a file dialog for selecting the output folder
-        folder_path = filedialog.askdirectory()
-        folder_entry.delete(0, tk.END)
-        folder_entry.insert(0, folder_path)
+def browse_folder():
+    # Function to open a file dialog for selecting the output folder
+    folder_path = filedialog.askdirectory()
+    folder_entry.delete(0, tk.END)
+    folder_entry.insert(0, folder_path)
 
-    def hide_status_label():
-        # Function to hide the status label
-        status_label.config(text="")
+def hide_status_label():
+    # Function to hide the status label
+    status_label.configure(text="")
 
-    def download():
-        # Download function
-        output_path = folder_entry.get()
-        selected_option = download_option.get()
-        url = video_entry.get()
-        output_file_type = file_option.get()
+def download():
+    # Download function
+    output_path = folder_entry.get()
+    selected_option = download_option.get()
+    url = video_entry.get()
+    output_file_type = file_option.get()
 
-        hide_status_label()
+    hide_status_label()
 
-        if not url:
-            status_label.config(text="Error: Missing input")
-        elif not output_path:
-            status_label.config(text="Error: No output folder specified")
-        else:
-            if selected_option == "YouTube - Single Video":
-                download_single_video(url, output_path, output_file_type, None)
-            elif selected_option == "YouTube - Playlist":
-                download_playlist(url, output_path, output_file_type)
-            elif selected_option == "Vimeo - Single Video":
-                download_vimeo_video(url, output_path, output_file_type)
+    if not url:
+        status_label.configure(text="Error: Missing input")
+    elif not output_path:
+        status_label.configure(text="Error: No output folder specified")
+    else:
+        if selected_option == "YouTube - Single Video":
+            download_single_video(url, output_path, output_file_type, None)
+        elif selected_option == "YouTube - Playlist":
+            download_playlist(url, output_path, output_file_type)
+        elif selected_option == "Vimeo - Single Video":
+            download_vimeo_video(url, output_path, output_file_type)
 
-    # Initialize GUI
-    app = tk.Tk()
+# Create App class
+class App(ctk.CTk):
+        # Layout of the GUI will be written in the init itself
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    # Set Window Title 
-    app.title("PyTubeDL")
+        # Sets the title of our window to "App"
+        self.title("PyTubeDL")    
 
-    # Set Window Icon
-    app.iconbitmap("icon.ico")
+        # Set Window Icon
+        self.iconbitmap("icon.ico")
 
-    # Set the initial window size
-    app.geometry("300x200")
+        # Set the initial window size
+        self.geometry("300x200")
 
-    app.grid_rowconfigure(0, weight=1)
-    app.grid_columnconfigure(0, weight=1)
+        # Set minimum window size
+        self.minsize(600, 400)
 
-    frame = ttk.Frame(app, padding=10)
-    frame.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-    for i in range(11):
-        frame.grid_rowconfigure(i, weight=1)
-    frame.grid_columnconfigure(0, weight=1)
+        self.frame = ctk.CTkFrame(self)
+        self.frame.grid(column=0, row=0, padx=30, pady=15, sticky=(ctk.N, ctk.W, ctk.E, ctk.S))
 
-    download_label = ttk.Label(frame, text="Download Type:")
-    download_label.grid(column=0, row=0, sticky=tk.W)
+        for i in range(11):
+            self.frame.grid_rowconfigure(i, weight=1)
+        self.frame.grid_columnconfigure(0, weight=1)
 
-    download_option = ttk.Combobox(frame, values=DOWNLOAD_OPTIONS_LIST)
-    download_option.set("YouTube - Single Video")
-    download_option.grid(column=0, row=1, sticky="ew")
+        self.download_label = ctk.CTkLabel(self.frame, text="Download Type:")
+        self.download_label.grid(column=0, row=0, sticky=ctk.W)
 
-    video_label = ttk.Label(frame, text="Input URL:")
-    video_label.grid(column=0, row=2, sticky=tk.W)
+        global download_option
+        download_option = ctk.CTkOptionMenu(self.frame, values=DOWNLOAD_OPTIONS_LIST)
+        download_option.set("YouTube - Single Video")
+        download_option.grid(column=0, row=1, sticky="ew")
 
-    video_entry = ttk.Entry(frame)
-    video_entry.grid(column=0, row=3, sticky="ew")
+        self.video_label = ctk.CTkLabel(self.frame, text="Input URL:")
+        self.video_label.grid(column=0, row=2, sticky=ctk.W)
 
-    folder_label = ttk.Label(frame, text="Output Folder:")
-    folder_label.grid(column=0, row=4, sticky=tk.W)
+        global video_entry
+        video_entry = ctk.CTkEntry(self.frame)
+        video_entry.grid(column=0, row=3, sticky="ew")
 
-    folder_entry = ttk.Entry(frame)
-    folder_entry.grid(column=0, row=5, sticky="ew")
+        self.folder_label = ctk.CTkLabel(self.frame, text="Output Folder:")
+        self.folder_label.grid(column=0, row=4, sticky=ctk.W)
 
-    browse_button = ttk.Button(frame, text="Browse", command=browse_folder)
-    browse_button.grid(column=1, row=5, sticky="ew")
+        global folder_entry
+        folder_entry = ctk.CTkEntry(self.frame)
+        folder_entry.grid(column=0, row=5, sticky="ew")
 
-    file_label = ttk.Label(frame, text="Output Format:")
-    file_label.grid(column=0, row=6, sticky=tk.W)
+        self.browse_button = ctk.CTkButton(self.frame, text="Browse", width=30, command=browse_folder)
+        self.browse_button.grid(column=1, row=5, sticky="ew")
 
-    file_option = ttk.Combobox(frame, values=FILE_OPTIONS_LIST)
-    file_option.set("MP4")
-    file_option.grid(column=0, row=7, sticky="ew")
+        self.file_label = ctk.CTkLabel(self.frame, text="Output Format:")
+        self.file_label.grid(column=0, row=6, sticky=ctk.W)
 
-    download_button = ttk.Button(frame, text="Download", command=download)
-    download_button.grid(column=0, row=8, sticky="ew")
+        global file_option
+        file_option = ctk.CTkOptionMenu(self.frame, values=FILE_OPTIONS_LIST)
+        file_option.set("MP4")
+        file_option.grid(column=0, row=7, sticky="ew")
 
-    global status_label
-    status_label = ttk.Label(frame, text="")
-    status_label.grid(column=0, row=9, columnspan=2, sticky="ew")
+        self.download_button = ctk.CTkButton(self.frame, text="Download", command=download)
+        self.download_button.grid(column=0, row=8)
 
-    app.mainloop()
+        global status_label
+        status_label = ctk.CTkLabel(self.frame, text="")
+        status_label.grid(column=0, row=9, columnspan=2, sticky="ew")
 
 ###########################################################
 # FUNCTIONS RELATED TO COMMAND LINE INTERFACE
@@ -379,7 +395,10 @@ def cli():
 
 if __name__ == "__main__":
     args = cli()
+    app = App()
     if args is not None:
-        gui()
+        #gui()
+        app.mainloop()
     else:
-        gui()
+        #gui()
+        app.mainloop()
