@@ -260,7 +260,7 @@ def download_vimeo_video(video_url, output_path, extension):
 def browse_folder():
     # Function to open a file dialog for selecting the output folder
     folder_path = filedialog.askdirectory()
-    folder_entry.delete(0, tk.END)
+    folder_entry.delete(0, ctk.END)
     folder_entry.insert(0, folder_path)
 
 def hide_status_label():
