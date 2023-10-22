@@ -72,7 +72,8 @@ Special thanks to:
 - Nick Finaco for the pytube library.
 - Yash Rathi for the vimeo-downloader library.
 - Tom Schimansky for the CustomTkinter library.
-
+- Fabrice Bellard and contributors for ffmpeg
+ 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
