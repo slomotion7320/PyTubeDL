@@ -111,6 +111,18 @@ def convert_file(input, output_file_type):
     elif output_file_type == "mov":
         command = 'ffmpeg -i "{}" -c:v libx264 -c:a aac "{}.mov"'.format(input, input)
         subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "ogg":
+        command = 'ffmpeg -i {} -c:a libvorbis -q:a 4 {}.ogg"'.format(input, input)
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "mp3":
+        command = 'ffmpeg -i {} -c:a libmp3lame -q:a 2 {}.mp3'.format(input, input)
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "wav":
+        command = 'ffmpeg -i {} -c:a pcm_s16le {}.wav'.format(input, input)
+        subprocess.run(command, shell=True, check=True)
+    elif output_file_type == "flac":
+        command = 'ffmpeg -i {} -c:a flac {}.flac'.format(input, input)
+        subprocess.run(command, shell=True, check=True)
     else:
         status_label.config(text="Error: " + "Invalid filetype specified.")
     
@@ -136,6 +148,7 @@ def sanitize_filename(filename):
 
 # Validate URL without knowing what download method is being used
 def validate_url(url_input):
+    # Add a try/except block for generic status code
     youtube_regex = r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*"
     youtube_short_regex = r"^(https?://)?(www\.)?(youtu\.be)/.*"
     playlist_regex = r"^(https?://)?(www\.)?(youtube\.com/playlist\?list=).*"
@@ -154,13 +167,23 @@ def validate_url(url_input):
         return None
     
 # Single YT Video Method
-def download_single_video(video_url, output_path, extension):
+def download_single_video(video_url, output_path, extension, index):
     output_path = output_path.replace("/", "\\")
     try:
         if validate_url(video_url) != None:
             yt = YouTube(video_url)
             stream = yt.streams.get_highest_resolution()
             sanitized_title = sanitize_filename(yt.title)  # Sanitize the video title
+
+            # Only format numbers if it is a playlist
+            if index != None:
+                 # Check if index is a single digit, and if so, add a leading zero
+                if 0 <= index < 10:
+                    index = f'0{index}'
+                else:
+                    index = str(index)
+                sanitized_title = "{} - {}".format(index, sanitized_title)
+
             stream.download(output_path, sanitized_title)
             status_label.config(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
@@ -182,8 +205,8 @@ def download_playlist(playlist_url, output_path, extension):
         playlist_title = sanitize_filename(pl.title)
         playlist_folder = os.path.join(output_path, playlist_title)
         os.makedirs(playlist_folder, exist_ok=True)
-        for video in pl.videos:
-            download_single_video(video.watch_url, playlist_folder, extension)         
+        for index, video in enumerate(pl.videos):
+            download_single_video(video.watch_url, playlist_folder, extension, index+1)         
             
         # Zip the folder
         zip_filename = f"{playlist_title}.zip"
@@ -251,7 +274,7 @@ def gui():
             status_label.config(text="Error: No output folder specified")
         else:
             if selected_option == "YouTube - Single Video":
-                download_single_video(url, output_path, output_file_type)
+                download_single_video(url, output_path, output_file_type, None)
             elif selected_option == "YouTube - Playlist":
                 download_playlist(url, output_path, output_file_type)
             elif selected_option == "Vimeo - Single Video":
@@ -357,8 +380,6 @@ def cli():
 if __name__ == "__main__":
     args = cli()
     if args is not None:
-        # Command-line arguments were provided
         gui()
     else:
-        # No command-line arguments, just run the GUI
         gui()
