@@ -1,2 +1,3 @@
 pytube==15.0.0
 vimeo-downloader==0.4.1
+customtkinter==5.2.1
