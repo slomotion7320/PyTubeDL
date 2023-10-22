@@ -84,6 +84,8 @@ FILE_OPTIONS_LIST = ["MP4",
                      "WAV", 
                      "FLAC"]
 
+CONCAT_LENGTH = 20
+
 ###########################################################
 # FUNCTIONS RELATED TO FILE HANDLING
 ###########################################################
@@ -160,11 +162,11 @@ def download_single_video(video_url, output_path, extension):
             stream = yt.streams.get_highest_resolution()
             sanitized_title = sanitize_filename(yt.title)  # Sanitize the video title
             stream.download(output_path, sanitized_title)
-            status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
+            status_label.config(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
             path = os.path.join(output_path, sanitized_title)
             convert_file(path, extension)
-            status_label.config(text=f"Converted: {sanitized_title[:12]+"..."}")
+            status_label.config(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
             if os.path.exists(path):
                 os.remove(path)
 
@@ -181,7 +183,7 @@ def download_playlist(playlist_url, output_path, extension):
         playlist_folder = os.path.join(output_path, playlist_title)
         os.makedirs(playlist_folder, exist_ok=True)
         for video in pl.videos:
-            download_single_video(video.watch_url, playlist_folder)         
+            download_single_video(video.watch_url, playlist_folder, extension)         
             
         # Zip the folder
         zip_filename = f"{playlist_title}.zip"
@@ -208,11 +210,11 @@ def download_vimeo_video(video_url, output_path, extension):
         best_stream = streams[-1]
         sanitized_title = sanitize_filename(meta.title)  # Sanitize the video title
         best_stream.download(download_directory=output_path, filename=sanitized_title)
-        status_label.config(text=f"Downloaded: {sanitized_title[:12]+"..."}")
+        status_label.config(text=f"Downloaded: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
         path = os.path.join(output_path, sanitized_title)
         convert_file(os.path.join(output_path, sanitized_title), extension)
-        status_label.config(text=f"Converted: {sanitized_title[:12]+"..."}")
+        status_label.config(text=f"Converted: {sanitized_title[:CONCAT_LENGTH]+"..."}")
 
         if os.path.exists(path):
             os.remove(path)        
@@ -223,57 +225,23 @@ def download_vimeo_video(video_url, output_path, extension):
 # FUNCTIONS RELATED TO GUI OPERATIONS
 ###########################################################
 
-def browse_folder():
-    folder_path = filedialog.askdirectory()
-    folder_entry.delete(0, tk.END)
-    folder_entry.insert(0, folder_path)
-
-def hide_status_label():
-    status_label.config(text="")
-
 def gui():
-    app = tk.Tk()
-    app.title("PyTubeDL")
-    
-    app.resizable(0, 0)
-    app.iconbitmap("icon.ico")
+    def browse_folder():
+        # Function to open a file dialog for selecting the output folder
+        folder_path = filedialog.askdirectory()
+        folder_entry.delete(0, tk.END)
+        folder_entry.insert(0, folder_path)
 
-    frame = ttk.Frame(app, padding=10)
-    frame.grid(column=0, row=0)
-
-    download_label = ttk.Label(frame, text="Download Type:")
-    download_label.grid(column=0, row=0, columnspan=3, sticky=tk.W)
-
-    download_option = ttk.Combobox(frame, values=DOWNLOAD_OPTIONS_LIST)
-    download_option.set("YouTube - Single Video")  # Set the default option
-    download_option.grid(column=0, row=1, columnspan=3)
-
-    video_label = ttk.Label(frame, text="Input URL:")
-    video_label.grid(column=0, row=2, columnspan=3, sticky=tk.W)
-
-    video_entry = ttk.Entry(frame)
-    video_entry.grid(column=0, row=3, columnspan=3)
-
-    folder_label = ttk.Label(frame, text="Output Folder:")
-    folder_label.grid(column=0, row=4, columnspan=3, sticky=tk.W)
-
-    global folder_entry
-    folder_entry = ttk.Entry(frame)
-    folder_entry.grid(column=0, row=5, columnspan=2)
-
-    browse_button = ttk.Button(frame, text="Browse", command=browse_folder)
-    browse_button.grid(column=2, row=5)
-
-    file_option = ttk.Combobox(frame, values=FILE_OPTIONS_LIST)
-    file_option.set("MP4")  # Set the default option
-    file_option.grid(column=0, row=6, columnspan=3)
+    def hide_status_label():
+        # Function to hide the status label
+        status_label.config(text="")
 
     def download():
+        # Download function
         output_path = folder_entry.get()
         selected_option = download_option.get()
         url = video_entry.get()
         output_file_type = file_option.get()
-        print(output_file_type)
 
         hide_status_label()
 
@@ -286,15 +254,66 @@ def gui():
                 download_single_video(url, output_path, output_file_type)
             elif selected_option == "YouTube - Playlist":
                 download_playlist(url, output_path, output_file_type)
-            elif selected_option == "Vimeo":
+            elif selected_option == "Vimeo - Single Video":
                 download_vimeo_video(url, output_path, output_file_type)
 
+    # Initialize GUI
+    app = tk.Tk()
+
+    # Set Window Title 
+    app.title("PyTubeDL")
+
+    # Set Window Icon
+    app.iconbitmap("icon.ico")
+
+    # Set the initial window size
+    app.geometry("300x200")
+
+    app.grid_rowconfigure(0, weight=1)
+    app.grid_columnconfigure(0, weight=1)
+
+    frame = ttk.Frame(app, padding=10)
+    frame.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+
+    for i in range(11):
+        frame.grid_rowconfigure(i, weight=1)
+    frame.grid_columnconfigure(0, weight=1)
+
+    download_label = ttk.Label(frame, text="Download Type:")
+    download_label.grid(column=0, row=0, sticky=tk.W)
+
+    download_option = ttk.Combobox(frame, values=DOWNLOAD_OPTIONS_LIST)
+    download_option.set("YouTube - Single Video")
+    download_option.grid(column=0, row=1, sticky="ew")
+
+    video_label = ttk.Label(frame, text="Input URL:")
+    video_label.grid(column=0, row=2, sticky=tk.W)
+
+    video_entry = ttk.Entry(frame)
+    video_entry.grid(column=0, row=3, sticky="ew")
+
+    folder_label = ttk.Label(frame, text="Output Folder:")
+    folder_label.grid(column=0, row=4, sticky=tk.W)
+
+    folder_entry = ttk.Entry(frame)
+    folder_entry.grid(column=0, row=5, sticky="ew")
+
+    browse_button = ttk.Button(frame, text="Browse", command=browse_folder)
+    browse_button.grid(column=1, row=5, sticky="ew")
+
+    file_label = ttk.Label(frame, text="Output Format:")
+    file_label.grid(column=0, row=6, sticky=tk.W)
+
+    file_option = ttk.Combobox(frame, values=FILE_OPTIONS_LIST)
+    file_option.set("MP4")
+    file_option.grid(column=0, row=7, sticky="ew")
+
     download_button = ttk.Button(frame, text="Download", command=download)
-    download_button.grid(column=0, row=7, columnspan=3)
+    download_button.grid(column=0, row=8, sticky="ew")
 
     global status_label
     status_label = ttk.Label(frame, text="")
-    status_label.grid(column=0, row=8, columnspan=3)
+    status_label.grid(column=0, row=9, columnspan=2, sticky="ew")
 
     app.mainloop()
 
